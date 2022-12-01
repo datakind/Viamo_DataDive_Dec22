@@ -1,0 +1,3 @@
+Workstream #1: Univariate Data Exploration
+Subset by country (variable: organization_country) such that you are analyzing for Uganda, Nigeria, and Mali distinct from one another
+The intent of work in this workstream is to drive an understanding of what is contained within the dataset and to surface those findings such that the Viamo team can offer feedback as to if they are surprised, if performance is as expected, etc. This section will form the basis of work in data integrity - the future detection of inconsistent or problematic data within the dataset. 
