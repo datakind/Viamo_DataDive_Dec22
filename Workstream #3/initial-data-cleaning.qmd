@@ -1,0 +1,92 @@
+---
+title: "VIAMO DataDive"
+author: "Dan Wall"
+format: html
+---
+
+```{r}
+library(tidyverse)
+library(vroom)
+first_dataset <-
+  read_csv(
+    "sample-uganda-data/3m_uganda-3m_uganda_000000000000.csv",
+    col_types = cols(
+      call_id = col_big_integer(),
+      block_interaction_id = col_big_integer(),
+      subscriber_id = col_big_integer(),
+      km_block_reached   = col_big_integer(),
+      km_block_listened  = col_big_integer(),
+      new_listener_ever   = col_big_integer(),
+      new_listener_year    = col_big_integer(),
+      organization_id = col_big_integer(),
+      new_caller_ever   = col_big_integer(),
+      new_caller_year      = col_big_integer(),
+      location_level_2 = col_character()
+    )
+  )
+
+theme_set(theme_minimal())
+```
+
+# Within an individual call (call_id), what is the distribution of the number of block interaction ids that occur within a single call?
+
+
+
+```{r}
+library(bigrquery)
+
+bq_auth(path = "jsonkey/viamo-key.json")
+
+con <- DBI::dbConnect(
+  bigrquery::bigquery(),
+  project = "viamo-datakind", 
+  dataset = "datadive", 
+  bigint = "integer64"
+)
+con
+dbListTables(con)
+
+
+fullcon <- tbl(con, "321_sessions_1122")
+
+uganda_data <- fullcon %>% 
+  select(organization_country, call_id, block_interaction_id, duration_listened_seconds, block_audio_percent_listened, block_title, block_theme, block_topic, km_block_reached, km_block_listened) %>% 
+  filter(organization_country == "Uganda") 
+```
+
+
+```{r}
+block_interactions <- uganda_data %>% 
+  group_by(call_id) %>% 
+  summarise(n_block_interaction_id = n_distinct(block_interaction_id)) %>% 
+  ungroup %>% 
+  group_by(n_block_interaction_id) %>% 
+  summarise(n_calls = n()) %>% 
+  arrange(n_block_interaction_id)
+
+# Combine calls with greater than 100 interactions 
+block_interactions_capped <- block_interactions %>% 
+  mutate(n_block_interactions_capped = case_when(n_block_interaction_id > 100 ~ 100, 
+                                                 TRUE ~ n_block_interaction_id)) %>% 
+  group_by(n_block_interactions_capped) %>% 
+  summarise(n_calls = sum(n_calls)) %>% 
+  arrange(n_block_interactions_capped) 
+
+
+# Collect the data
+block_interactions_capped <- block_interactions_capped %>% collect
+
+# Change datatype for ggplot
+block_interactions_capped <- block_interactions_capped %>% 
+  mutate(n_calls = n_calls %>% as.numeric())
+
+ggplot(block_interactions_capped,
+       aes(x = n_block_interactions_capped, y = n_calls)) +
+  geom_bar(stat= "identity") +
+  xlab("Number of Block Interactions") +
+  ylab("Number of Calls") +
+  theme(text = element_text(size = 18))
+
+ggsave("n-block-interaction-percall.png")
+```
+
