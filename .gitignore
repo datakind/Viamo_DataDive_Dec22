@@ -1,0 +1,13 @@
+# Jupyter Notebook
+*.ipynb_checkpoints
+
+# datasets
+*.csv
+*.zip
+*.xlsx
+*.gz
+
+# folders
+
+#json
+*.json
