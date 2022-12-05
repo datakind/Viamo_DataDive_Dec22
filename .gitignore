@@ -1,5 +1,16 @@
 
-.DS_Store
-DS_Store
+# Jupyter Notebook
+*.ipynb_checkpoints
 
-viamo-datakind-19b12e3872f5.json
+# datasets
+*.csv
+*.zip
+*.xlsx
+*.gz
+
+# folders
+
+#json
+*.json
+.DS_Store
+
